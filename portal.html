@@ -1,0 +1,267 @@
+<!-- ===================================================== -->
+<!-- PORTAL PAGE TEMPLATE (portal.html)                    -->
+<!-- A Spotify‑style landing page for each musical work    -->
+<!-- ===================================================== -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piece Portal – Salpinx Music</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+
+<style>
+
+body{margin:0;background:#e6e6e6;font-family:Inter, sans-serif}
+
+header{
+font-family:"Libre Caslon Display",serif;
+background:#0d0d0f;
+color:white;
+padding:24px 50px;
+font-size:42px;
+letter-spacing:8px;
+}
+
+.portalHero{
+background:#5a1d1d;
+color:white;
+padding:60px 60px 80px 60px;
+display:flex;
+align-items:flex-end;
+gap:40px;
+}
+
+.portalHero img{
+width:220px;
+height:220px;
+object-fit:cover;
+box-shadow:0 20px 40px rgba(0,0,0,.3);
+}
+
+.portalMeta h1{
+font-family:"Libre Caslon Display",serif;
+font-size:54px;
+margin:0 0 10px 0;
+}
+
+.portalComposer{
+font-family:"Libre Caslon Text",serif;
+font-variant:small-caps;
+letter-spacing:4px;
+font-size:20px;
+}
+
+.portalDetails{
+margin-top:10px;
+font-size:14px;
+opacity:.9;
+}
+
+.playMain{
+margin-top:20px;
+background:black;
+color:white;
+padding:14px 26px;
+border-radius:30px;
+display:inline-block;
+cursor:pointer;
+font-weight:bold;
+}
+
+.portalBody{
+padding:50px 60px;
+max-width:900px;
+}
+
+.sectionTitle{
+font-family:"Libre Caslon Display",serif;
+font-size:28px;
+margin-bottom:20px;
+}
+
+.movementTable{
+width:100%;
+border-collapse:collapse;
+font-size:15px;
+}
+
+.movementTable tr{
+border-bottom:1px solid rgba(0,0,0,.08);
+cursor:pointer;
+}
+
+.movementTable tr:hover{
+background:rgba(0,0,0,.05);
+}
+
+.movementTable td{
+padding:12px 6px;
+}
+
+.num{width:40px;opacity:.6}
+.duration{text-align:right;opacity:.7}
+
+.relatedSection{
+margin-top:60px;
+}
+
+.relatedGrid{
+display:grid;
+grid-template-columns:repeat(auto-fill,180px);
+gap:24px;
+}
+
+.relatedCard{
+background:white;
+padding:14px;
+border-radius:10px;
+box-shadow:0 6px 14px rgba(0,0,0,.08);
+cursor:pointer;
+}
+
+.relatedCard img{
+width:100%;
+height:160px;
+object-fit:cover;
+margin-bottom:8px;
+}
+
+.relatedTitle{
+font-family:"Libre Caslon Display",serif;
+font-size:16px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>SALPINX MUSIC</header>
+
+<div class="portalHero">
+
+<img id="portalArt">
+
+<div class="portalMeta">
+<h1 id="portalTitle">Loading...</h1>
+<div class="portalComposer" id="portalComposer"></div>
+<div class="portalDetails" id="portalRecording"></div>
+
+<div class="playMain" id="playAll">▶ Play Work</div>
+
+</div>
+
+</div>
+
+<div class="portalBody">
+
+<div class="sectionTitle">Movements</div>
+
+<table class="movementTable" id="movementTable"></table>
+
+<div class="relatedSection">
+
+<div class="sectionTitle">More Like This</div>
+
+<div class="relatedGrid" id="relatedGrid">
+
+<!-- example cards -->
+<div class="relatedCard">
+<img src="icon.jpeg">
+<div class="relatedTitle">Beethoven – Symphony No.7</div>
+</div>
+
+<div class="relatedCard">
+<img src="icon.jpeg">
+<div class="relatedTitle">Bach – Violin Concerto</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const titleEl=document.getElementById('portalTitle')
+const composerEl=document.getElementById('portalComposer')
+const recEl=document.getElementById('portalRecording')
+const art=document.getElementById('portalArt')
+const table=document.getElementById('movementTable')
+
+async function getDuration(file){
+return new Promise(resolve=>{
+const a=document.createElement('audio')
+a.src=file
+
+a.addEventListener('loadedmetadata',()=>resolve(a.duration))
+a.addEventListener('error',()=>resolve(NaN))
+})
+}
+
+function formatTime(sec){
+if(!isFinite(sec))return"--:--"
+const m=Math.floor(sec/60)
+const s=Math.floor(sec%60)
+return String(m).padStart(2,'0')+":"+String(s).padStart(2,'0')
+}
+
+async function loadPortal(){
+
+const res=await fetch('info.yaml')
+const data=jsyaml.load(await res.text())
+
+art.src=`./${piece}/icon.jpeg`
+
+titleEl.textContent=data.title
+composerEl.textContent=data.Composer
+
+recEl.textContent=(data.recording?.conductor||'')+" – "+(data.recording?.orchestra||'')
+
+const piece=data['piece info']||{}
+const keys=Object.keys(piece)
+
+for(let i=0;i<keys.length;i++){
+
+const m=piece[keys[i]]
+
+const row=document.createElement('tr')
+
+const num=document.createElement('td')
+num.className='num'
+num.textContent=i+1
+
+const name=document.createElement('td')
+name.textContent=m.name
+
+const dur=document.createElement('td')
+dur.className='duration'
+dur.textContent='--:--'
+
+row.appendChild(num)
+row.appendChild(name)
+row.appendChild(dur)
+
+row.onclick=()=>{
+window.location.href=`./${piece}/index.html#${i}`
+}
+
+getDuration(`./${piece}/`+m.file).then(d=>dur.textContent=formatTime(d))
+
+table.appendChild(row)
+
+}
+
+}
+
+loadPortal()
+
+</script>
+
+</body>
+</html>

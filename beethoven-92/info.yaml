@@ -1,0 +1,26 @@
+title: "Symphony no. 7"
+
+Composer: "van Beethoven, Ludwig"
+
+recording:
+  soloist: "René Leibowitz"
+  conductor: ""
+  orchestra: "Royal Philharmonic Orchestra"
+  record: "Reader's Digest"
+
+piece info:
+  movement 1:
+    name: "Poco sostenuto – Vivace"
+    file: "movement1.mp3"
+
+  movement 2:
+    name: "Allegretto"
+    file: "movment2.mp3"
+
+  movement 3:
+    name: "Presto"
+    file: "movement3.mp3"
+
+  movement 4:
+    name: "Allegro con brio"
+    file: "movement4.mp3"

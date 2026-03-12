@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salpinx Music</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+
+<style>
+
+body{margin:0;background:#e6e6e6;height:100vh;display:flex;flex-direction:column}
+
+header{font-family:"Libre Caslon Display",serif;background:#0d0d0f;color:white;padding:24px 50px;font-size:42px;letter-spacing:8px}
+
+.app{flex:1;display:flex;overflow:hidden}
+
+.sidebar{width:340px;padding:50px 40px;box-sizing:border-box}
+
+.album{background:#6f0000;padding:40px 30px;border-radius:30px;color:white;text-align:center}
+
+.album img{width:160px;height:160px;object-fit:cover;margin-bottom:20px}
+
+.album h2{font-family:"Libre Caslon Display",serif;font-size:34px;margin:10px 0;font-weight: normal;}
+
+.album .composer{font-family:"Libre Caslon Text",serif;font-variant:small-caps;letter-spacing:4px;font-size:18px}
+
+.album .label{font-family:"Inter",sans-serif;font-weight:700;margin-top:20px;font-size:16px;letter-spacing:1px}
+
+.main{flex:1;padding:60px;overflow-y:auto}
+
+.performers{font-family:"Libre Caslon Display",serif;font-size:42px;line-height:1.3;color:#5a1d1d;max-width:720px}
+
+.divider{height:4px;background:#222;margin:30px 0;width:420px}
+
+.tracks{font-family:"Inter",sans-serif;font-size:20px;line-height:2}
+
+.tracks span{cursor:pointer;padding:6px 10px;border-radius:8px;display:block}
+
+.tracks span:hover{background:rgba(0,0,0,0.08)}
+.tracks span.active{font-weight:bold;text-decoration:underline}
+
+/* PLAYLIST TREE */
+.playlistColumn{width:320px;padding:50px 30px;background:#efefef;box-shadow:-2px 0 10px rgba(0,0,0,0.05);overflow-y:auto}
+
+.playlistTitle{font-family:"Libre Caslon Display",serif;font-size:20px;margin-bottom:20px}
+
+.treePiece{margin-bottom:18px}
+
+.treePieceTitle{font-family:"Inter",sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:6px}
+
+.treeMovements{margin-left:12px;border-left:2px solid rgba(0,0,0,0.1);padding-left:10px}
+
+.treeMovement{display:flex;justify-content:space-between;font-family:"Inter",sans-serif;font-size:13px;padding:4px 0;cursor:pointer}
+
+.treeMovement:hover{background:rgba(0,0,0,0.05)}
+
+.treeMovement.active{font-weight:700}
+
+.duration{opacity:.6}
+
+/* PLAYER */
+.playerBar{position:fixed;bottom:0;left:0;right:0;height:110px;background:#111;color:white;font-family:"Inter",sans-serif;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;box-sizing:border-box}
+
+.nowBlock{display:flex;align-items:center;gap:16px;width:260px}
+
+.nowBlock img{width:60px;height:60px;object-fit:cover;border-radius:6px}
+
+.nowTitle{font-size:13px;letter-spacing:1px}
+
+.controls{display:flex;flex-direction:column;align-items:center;width:560px}
+
+.controlRow{display:flex;gap:18px;align-items:center;margin-bottom:8px}
+
+.controlBtn{font-size:20px;cursor:pointer}
+
+.progress{width:100%;height:5px;background:#555;position:relative;cursor:pointer}
+
+.progress-bar{position:absolute;left:0;top:0;height:100%;width:0%;background:white}
+
+.time-row{width:100%;display:flex;justify-content:space-between;font-size:11px;margin-top:4px}
+
+.extraControls{width:220px;text-align:right;font-size:12px;opacity:.8}
+
+</style>
+</head>
+
+<body>
+
+<header>SALPINX MUSIC</header>
+
+<div class="app">
+
+<div class="sidebar">
+<div class="album">
+<img id="albumArt">
+<h2 id="pieceTitle">Loading...</h2>
+<div class="composer" id="composer"></div>
+<div class="label" id="recordLabel"></div>
+</div>
+</div>
+
+<div class="main">
+<div class="performers" id="performers"></div>
+<div class="divider"></div>
+<div class="tracks" id="movementList"></div>
+</div>
+
+<div class="playlistColumn">
+<div class="playlistTitle">PLAYLIST</div>
+<div id="playlistTree"></div>
+</div>
+
+</div>
+
+<div class="playerBar">
+
+<div class="nowBlock">
+<img id="bottomArt">
+<div class="nowTitle" id="nowPlaying">NOW PLAYING</div>
+</div>
+
+<div class="controls">
+
+<div class="controlRow">
+<span class="controlBtn" id="backBtn">⏮</span>
+<span class="controlBtn" id="rewindBtn">⏪</span>
+<span class="controlBtn" id="playButton">▶</span>
+<span class="controlBtn" id="forwardBtn">⏩</span>
+<span class="controlBtn" id="nextBtn">⏭</span>
+</div>
+
+<div class="progress" id="progressContainer">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="time-row">
+<span id="currentTime">00:00</span>
+<span id="duration">00:00</span>
+</div>
+
+</div>
+
+<div class="extraControls">SALPINX PLAYER</div>
+
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+<script>
+
+const audio=document.getElementById('audio')
+const playButton=document.getElementById('playButton')
+const rewindBtn=document.getElementById('rewindBtn')
+const forwardBtn=document.getElementById('forwardBtn')
+const backBtn=document.getElementById('backBtn')
+const nextBtn=document.getElementById('nextBtn')
+
+const progressBar=document.getElementById('progressBar')
+const progressContainer=document.getElementById('progressContainer')
+const currentTimeEl=document.getElementById('currentTime')
+const durationEl=document.getElementById('duration')
+
+const movementList=document.getElementById('movementList')
+const playlistTree=document.getElementById('playlistTree')
+
+const pieceTitle=document.getElementById('pieceTitle')
+const composer=document.getElementById('composer')
+const recordLabel=document.getElementById('recordLabel')
+const performers=document.getElementById('performers')
+const nowPlaying=document.getElementById('nowPlaying')
+const albumArt=document.getElementById('albumArt')
+const bottomArt=document.getElementById('bottomArt')
+
+let movements=[]
+let currentMovement=0
+
+
+/* resolves YAML file paths or URLs */
+function resolveFile(path){
+
+if(!path) return ''
+
+if(/^https?:\/\//i.test(path)) return path
+
+if(path.startsWith('/')) return path
+
+return new URL(path,window.location.href).href
+
+}
+
+
+function formatTime(seconds){
+
+if(!isFinite(seconds))return"--:--"
+
+const m=Math.floor(seconds/60)
+const s=Math.floor(seconds%60)
+
+return String(m).padStart(2,'0')+":"+String(s).padStart(2,'0')
+
+}
+
+
+async function getDuration(file){
+
+return new Promise(resolve=>{
+
+const a=document.createElement('audio')
+
+a.src=resolveFile(file)
+
+a.addEventListener('loadedmetadata',()=>resolve(a.duration))
+a.addEventListener('error',()=>resolve(NaN))
+
+})
+
+}
+
+
+async function loadInfo(){
+
+try{
+
+const res=await fetch('info.yaml')
+const data=jsyaml.load(await res.text())
+
+pieceTitle.textContent=data.title||''
+composer.textContent=data.Composer||''
+recordLabel.textContent=data.recording?.record||''
+
+let perf=''
+if(data.recording?.soloist)perf+=data.recording.soloist+', '
+perf+=(data.recording?.conductor||'')+',<br>'+(data.recording?.orchestra||'')
+
+performers.innerHTML=perf
+
+albumArt.src='icon.jpeg'
+bottomArt.src='icon.jpeg'
+
+movements=[]
+movementList.innerHTML=''
+playlistTree.innerHTML=''
+
+const pieceInfo=data['piece info']||{}
+const keys=Object.keys(pieceInfo)
+
+const pieceNode=document.createElement('div')
+pieceNode.className='treePiece'
+
+const title=document.createElement('div')
+title.className='treePieceTitle'
+title.textContent=data.title
+
+const movementContainer=document.createElement('div')
+movementContainer.className='treeMovements'
+
+pieceNode.appendChild(title)
+pieceNode.appendChild(movementContainer)
+playlistTree.appendChild(pieceNode)
+
+
+for(let i=0;i<keys.length;i++){
+
+const m=pieceInfo[keys[i]]
+
+const movement={
+name:m.name,
+file:resolveFile(m.file),
+duration:null
+}
+
+movements.push(movement)
+
+
+const span=document.createElement('span')
+span.textContent=m.name
+span.onclick=()=>loadMovement(i,true)
+movementList.appendChild(span)
+
+
+const row=document.createElement('div')
+row.className='treeMovement'
+
+const name=document.createElement('div')
+name.textContent=m.name
+
+const dur=document.createElement('div')
+dur.className='duration'
+dur.textContent='--:--'
+
+row.appendChild(name)
+row.appendChild(dur)
+
+row.onclick=()=>loadMovement(i,true)
+
+movementContainer.appendChild(row)
+
+
+getDuration(movement.file).then(d=>{
+
+movement.duration=d
+
+if(isFinite(d))dur.textContent=formatTime(d)
+
+})
+
+}
+
+
+if(movements.length>0)loadMovement(0,false)
+
+}catch(e){console.error(e)}
+
+}
+
+
+
+function loadMovement(index,autoplay=true){
+
+if(index<0||index>=movements.length)return
+
+currentMovement=index
+
+const movement=movements[index]
+
+audio.src=movement.file
+
+audio.load()
+
+nowPlaying.textContent="NOW PLAYING: "+pieceTitle.textContent+" — "+movement.name
+
+highlightMovement()
+
+if(autoplay){
+
+audio.play().then(()=>playButton.textContent='❚❚')
+
+}
+
+}
+
+
+playButton.onclick=()=>{
+
+if(audio.paused){
+
+audio.play()
+playButton.textContent='❚❚'
+
+}else{
+
+audio.pause()
+playButton.textContent='▶'
+
+}
+
+}
+
+
+rewindBtn.onclick=()=>audio.currentTime=Math.max(0,audio.currentTime-10)
+forwardBtn.onclick=()=>audio.currentTime=Math.min(audio.duration,audio.currentTime+10)
+
+backBtn.onclick=()=>loadMovement(currentMovement-1,true)
+nextBtn.onclick=()=>loadMovement(currentMovement+1,true)
+
+
+audio.addEventListener('loadedmetadata',()=>{
+
+durationEl.textContent=formatTime(audio.duration)
+
+})
+
+
+audio.addEventListener('timeupdate',()=>{
+
+if(!isFinite(audio.duration))return
+
+const progress=(audio.currentTime/audio.duration)*100
+
+progressBar.style.width=progress+'%'
+
+currentTimeEl.textContent=formatTime(audio.currentTime)
+
+})
+
+
+progressContainer.onclick=e=>{
+
+if(!isFinite(audio.duration))return
+
+const rect=progressContainer.getBoundingClientRect()
+
+const percent=(e.clientX-rect.left)/rect.width
+
+audio.currentTime=percent*audio.duration
+
+}
+
+
+audio.addEventListener('ended',()=>{
+
+if(currentMovement<movements.length-1){
+
+loadMovement(currentMovement+1,true)
+
+}
+
+})
+
+
+function highlightMovement(){
+
+const rows=document.querySelectorAll('.treeMovement')
+
+rows.forEach((r,i)=>r.classList.toggle('active',i===currentMovement))
+
+const spans=movementList.querySelectorAll('span')
+
+spans.forEach((s,i)=>s.classList.toggle('active',i===currentMovement))
+
+}
+
+
+loadInfo()
+
+</script>
+
+</body>
+</html>

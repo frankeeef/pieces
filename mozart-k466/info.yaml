@@ -1,0 +1,22 @@
+title: "Piano Concerto No. 20"
+
+Composer: "Mozart, Wolfgang Amadeus"
+
+recording:
+  soloist: "Sviatoslav Richter"
+  conductor: "Stanislaw Wisłocki"
+  orchestra: "Warsaw National Philharmonic"
+  record: "Deutsche Grammophon"
+
+piece info:
+  movement 1:
+    name: "Allegro"
+    file: "movement1.mp3"
+
+  movement 2:
+    name: "Romanza"
+    file: "movement2.mp3"
+
+  movement 3:
+    name: "Allegro assai"
+    file: "movement3.mp3"

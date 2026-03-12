@@ -1,0 +1,42 @@
+title: "Requiem in D Minor"
+
+Composer: "Mozart, Wolfgang Amadeus"
+
+recording:
+  soloist: "Herbert von Karjan"
+  conductor: "Wiener Singverein"
+  orchestra: "Berliner Philharmoniker"
+  record: "Deutsche Grammophon"
+
+piece info:
+  movement 1:
+    name: "Introitus"
+    file: "movement1.flac"
+
+  movement 2:
+    name: "Kyrie"
+    file: "movement2.flac"
+
+  movement 3:
+    name: "Dies Irae"
+    file: "movement3.flac"
+
+  movement 4:
+    name: "Tuba Mirum"
+    file: "movement4.flac"
+
+  movement 5:
+    name: "Rex Tremendae"
+    file: "movement5.flac"
+
+  movement 6:
+    name: "Recordare"
+    file: "movement6.flac"
+
+  movement 7:
+    name: "Confutatis"
+    file: "movement7.flac"
+
+  movement 8:
+    name: "Lacrimosa"
+    file: "movement8.flac"
